@@ -1,0 +1,54 @@
+{
+  // Statistics for the table
+  "table": {
+    "turns_number": {
+      "id": 10,
+      "name": "Number of turns",
+      "type": "int"
+    },
+    "reveal_cards_triggered": {
+      "id": 11,
+      "name": "Reveal a Secret Number cards triggered",
+      "type": "int"
+    }
+  },
+
+  // Statistics for each player
+  "player": {
+    "turns_number": {
+      "id": 10,
+      "name": "Number of turns",
+      "type": "int"
+    },
+    "clues_played_vertical": {
+      "id": 11,
+      "name": "Truthful Clue cards played",
+      "type": "int"
+    },
+    "clues_played_horizontal": {
+      "id": 12,
+      "name": "All-false horizontal Clue sets played",
+      "type": "int"
+    },
+    "abilities_triggered": {
+      "id": 13,
+      "name": "Clue abilities triggered",
+      "type": "int"
+    },
+    "guesses_correct": {
+      "id": 14,
+      "name": "Correct guesses",
+      "type": "int"
+    },
+    "guesses_incorrect": {
+      "id": 15,
+      "name": "Incorrect guesses",
+      "type": "int"
+    },
+    "times_guessed": {
+      "id": 16,
+      "name": "Times Secret Number was guessed",
+      "type": "int"
+    }
+  }
+}

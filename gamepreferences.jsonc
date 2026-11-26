@@ -1,0 +1,18 @@
+{
+  // user preferences ids should be between 100 and 199
+  // See https://en.doc.boardgamearena.com/Options_and_preferences:_gameoptions.json,_gamepreferences.json for more details
+  "100": {
+    "name": "Deduction Notepad Auto-Mark",
+    "values": {
+      "0": {
+        "name": "Manual only",
+        "cssPref": "deduction_auto_off"
+      },
+      "1": {
+        "name": "Auto-cross-out publicly revealed numbers",
+        "cssPref": "deduction_auto_on"
+      }
+    },
+    "default": 1
+  }
+}
