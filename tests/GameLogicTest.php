@@ -223,8 +223,10 @@ final class GameLogicTest extends TestCase
 
         // Horizontal +1/-1 card was discarded; horizontal >=6 and vertical -1 stayed!
         $this->assertSame(CardLocation::DISCARD, $hAdj->location);
-        $this->assertSame([CardLocation::TABLEAU, $p2], $hOther->location);
-        $this->assertSame([CardLocation::TABLEAU, $p1], $vAdj->location);
+        $this->assertSame(CardLocation::TABLEAU, $hOther->location);
+        $this->assertSame($p2, $hOther->locationArg);
+        $this->assertSame(CardLocation::TABLEAU, $vAdj->location);
+        $this->assertSame($p1, $vAdj->locationArg);
     }
 
     public function testIncorrectGuessPenaltySuppressesAbilities(): void

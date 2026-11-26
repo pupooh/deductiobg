@@ -419,7 +419,9 @@ namespace Bga\GameFramework\Components\ItemManager {
                 $obj = new $cls();
                 $obj->id = $this->nextId++;
                 $loc = $data['location'] ?? 'deck';
-                $obj->location = $loc;
+                [$locName, $locArg] = $this->normalizeLocation($loc);
+                $obj->location = $locName;
+                $obj->locationArg = $locArg;
                 $obj->order = $this->getMaxOrderInLocation($loc) + 1;
                 foreach ($data as $key => $val) {
                     if ($key !== 'location' && $key !== 'order') {
@@ -484,7 +486,9 @@ namespace Bga\GameFramework\Components\ItemManager {
                 return;
             }
             $newOrder = $order ?? ($this->getMaxOrderInLocation($to) + 1);
-            $item->location = $to;
+            [$locName, $locArg] = $this->normalizeLocation($to);
+            $item->location = $locName;
+            $item->locationArg = $locArg;
             $item->order = $newOrder;
         }
 
@@ -524,7 +528,7 @@ namespace Bga\GameFramework\Components\ItemManager {
         {
             $matched = array_filter(
                 $this->items,
-                fn(object $item): bool => $this->locationMatches($item->location, $location)
+                fn(object $item): bool => $this->locationMatches($item, $location)
             );
             usort($matched, static fn($a, $b): int => $reversed ? ($b->order <=> $a->order) : ($a->order <=> $b->order));
             if ($limit !== null) {
@@ -543,22 +547,23 @@ namespace Bga\GameFramework\Components\ItemManager {
             return $this->getItemsInLocation($location, reversed: true, limit: $number);
         }
 
-        private function locationMatches(array|string|int $actual, array|string|int $filter): bool
+        private function locationMatches(object $item, array|string|int $filter): bool
         {
-            $a = (array) $actual;
-            $f = (array) $filter;
-            if (count($a) !== count($f)) {
+            [$filterName, $filterArg] = $this->normalizeLocation($filter);
+            if ($item->location !== $filterName) {
                 return false;
             }
-            foreach ($f as $idx => $part) {
-                if ($part === null) {
-                    continue;
-                }
-                if ((string) $a[$idx] !== (string) $part) {
-                    return false;
-                }
+            // A null arg in the filter is a wildcard: it matches any arg, including none.
+            return $filterArg === null || $item->locationArg === $filterArg;
+        }
+
+        /** @return array{0: string, 1: ?int} */
+        private function normalizeLocation(array|string|int $location): array
+        {
+            if (is_array($location)) {
+                return [(string) ($location[0] ?? ''), isset($location[1]) ? (int) $location[1] : null];
             }
-            return true;
+            return [(string) $location, null];
         }
     }
 }

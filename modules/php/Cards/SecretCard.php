@@ -14,9 +14,16 @@ class SecretCard
     #[ItemField(kind: ItemFieldKind::ID)]
     public int $id;
 
-    /** @var array<int, string|int>|string */
-    #[ItemField(kind: ItemFieldKind::LOCATION)]
-    public array|string $location;
+    #[ItemField(kind: ItemFieldKind::LOCATION, locationIndex: 0)]
+    public string $location;
+
+    // NB: int|null on purpose, NOT int|string|null. ItemManager infers the
+    // locationArg storage/validation type from this property type, and a
+    // union containing string makes the framework expect string values.
+    // Every locationArg we ever store is an int (a player id) or null,
+    // so ?int is the exact type — this matches the Hearts tutorial.
+    #[ItemField(kind: ItemFieldKind::LOCATION, locationIndex: 1)]
+    public ?int $locationArg = null;
 
     #[ItemField(kind: ItemFieldKind::ORDER)]
     public int $order;
