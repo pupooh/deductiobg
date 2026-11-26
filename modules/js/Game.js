@@ -224,14 +224,23 @@ class PlayerTurn {
             else {
                 this.bga.statusBar.setTitle(_('${you} must play a truthful Clue card, take all 3, or guess a Secret Number'));
             }
-            const truthful = this.game.getTruthfulRowCards();
-            if (truthful.length > 0) {
-                this.game.setRowSelectionMode('single', truthful);
-            }
-            else {
-                this.game.setRowSelectionMode('none');
-                this.bga.statusBar.addActionButton(_('Take All 3 (Horizontal)'), () => this.game.playAllHorizontal(), { color: 'primary' });
-            }
+            // The truthful cards can only be computed once the setup
+            // addCards have placed the row cards in the stock: setup()
+            // does not await setupInitialCards, so evaluating here
+            // synchronously would see an empty stock and wrongly offer
+            // "Take All 3". Defer until the stocks are ready (same pattern
+            // as Deep Dive's applyWhenStocksReady).
+            const token = this.game.nextRowInteractivityToken();
+            this.game.applyWhenStocksReady(token, () => {
+                const truthful = this.game.getTruthfulRowCards();
+                if (truthful.length > 0) {
+                    this.game.setRowSelectionMode('single', truthful);
+                }
+                else {
+                    this.game.setRowSelectionMode('none');
+                    this.bga.statusBar.addActionButton(_('Take All 3 (Horizontal)'), () => this.game.playAllHorizontal(), { color: 'primary' });
+                }
+            });
             if (args.canGuess) {
                 this.game.setGuessAllowed(true);
                 this.bga.statusBar.addActionButton(_('Guess a Secret Number'), () => this.game.openGuessPicker(), { color: 'secondary' });
@@ -248,6 +257,8 @@ class PlayerTurn {
         }
     }
     onLeavingState(_args, _isCurrentPlayerActive) {
+        // Invalidate any deferred selection apply still waiting on the stocks.
+        this.game.nextRowInteractivityToken();
         this.game.setRowSelectionMode('none');
         this.game.setGuessAllowed(false);
         this.game.closeGuessPicker();
@@ -349,6 +360,10 @@ class Game {
         this.peekedCards = null;
         this.clueCardsById = new Map();
         this.secretCardsById = new Map();
+        /** Resolves once the setup addCards calls have placed every card. */
+        this.stocksReady = Promise.resolve();
+        /** Bumped by every row-interactivity change; stale deferred applies are ignored. */
+        this.rowInteractivityToken = 0;
         this.tableauStocks = new Map();
         this.secretStocks = new Map();
         this.guessedStocks = new Map();
@@ -383,7 +398,7 @@ class Game {
         this.secretManager = new SecretCardManager(this);
         this.renderTableHtml(gamedatas);
         this.createStocks();
-        this.setupInitialCards(gamedatas);
+        this.stocksReady = this.setupInitialCards(gamedatas);
         this.loadNotepadMarks();
         this.refreshNotepads();
         // User preference 100: Deduction Notepad Auto-Mark (default 1).
@@ -635,6 +650,17 @@ class Game {
     }
     setRowSelectionMode(mode, selectable) {
         this.clueRowStock.setSelectionMode(mode, selectable);
+    }
+    /** Run fn once the setup stocks are populated, unless row interactivity moved on. */
+    applyWhenStocksReady(token, fn) {
+        void this.stocksReady.then(() => {
+            if (token === this.rowInteractivityToken)
+                fn();
+        });
+    }
+    /** Bump the row-interactivity token; returns the new token. */
+    nextRowInteractivityToken() {
+        return ++this.rowInteractivityToken;
     }
     setGuessAllowed(allowed) {
         this.guessAllowed = allowed;

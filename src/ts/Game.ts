@@ -35,6 +35,11 @@ export class Game {
     private clueCardsById = new Map<number, ClueCardData>();
     private secretCardsById = new Map<number, SecretCardData>();
 
+    /** Resolves once the setup addCards calls have placed every card. */
+    private stocksReady: Promise<void> = Promise.resolve();
+    /** Bumped by every row-interactivity change; stale deferred applies are ignored. */
+    private rowInteractivityToken = 0;
+
     private clueRowStock!: BgaCards.LineStock<ClueCardData>;
     private clueDeck!: BgaCards.Deck<ClueCardData>;
     private clueDiscardStock!: BgaCards.DiscardDeck<ClueCardData>;
@@ -84,7 +89,7 @@ export class Game {
 
         this.renderTableHtml(gamedatas);
         this.createStocks();
-        this.setupInitialCards(gamedatas);
+        this.stocksReady = this.setupInitialCards(gamedatas);
         this.loadNotepadMarks();
         this.refreshNotepads();
 
@@ -365,6 +370,18 @@ export class Game {
 
     public setRowSelectionMode(mode: 'none' | 'single', selectable?: ClueCardData[]) {
         this.clueRowStock.setSelectionMode(mode, selectable);
+    }
+
+    /** Run fn once the setup stocks are populated, unless row interactivity moved on. */
+    public applyWhenStocksReady(token: number, fn: () => void): void {
+        void this.stocksReady.then(() => {
+            if (token === this.rowInteractivityToken) fn();
+        });
+    }
+
+    /** Bump the row-interactivity token; returns the new token. */
+    public nextRowInteractivityToken(): number {
+        return ++this.rowInteractivityToken;
     }
 
     public setGuessAllowed(allowed: boolean) {

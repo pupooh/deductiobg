@@ -31,17 +31,26 @@ export class PlayerTurn {
                 );
             }
 
-            const truthful = this.game.getTruthfulRowCards();
-            if (truthful.length > 0) {
-                this.game.setRowSelectionMode('single', truthful);
-            } else {
-                this.game.setRowSelectionMode('none');
-                this.bga.statusBar.addActionButton(
-                    _('Take All 3 (Horizontal)'),
-                    () => this.game.playAllHorizontal(),
-                    { color: 'primary' },
-                );
-            }
+            // The truthful cards can only be computed once the setup
+            // addCards have placed the row cards in the stock: setup()
+            // does not await setupInitialCards, so evaluating here
+            // synchronously would see an empty stock and wrongly offer
+            // "Take All 3". Defer until the stocks are ready (same pattern
+            // as Deep Dive's applyWhenStocksReady).
+            const token = this.game.nextRowInteractivityToken();
+            this.game.applyWhenStocksReady(token, () => {
+                const truthful = this.game.getTruthfulRowCards();
+                if (truthful.length > 0) {
+                    this.game.setRowSelectionMode('single', truthful);
+                } else {
+                    this.game.setRowSelectionMode('none');
+                    this.bga.statusBar.addActionButton(
+                        _('Take All 3 (Horizontal)'),
+                        () => this.game.playAllHorizontal(),
+                        { color: 'primary' },
+                    );
+                }
+            });
 
             if (args.canGuess) {
                 this.game.setGuessAllowed(true);
@@ -65,6 +74,8 @@ export class PlayerTurn {
     }
 
     onLeavingState(_args: PlayerTurnArgs, _isCurrentPlayerActive: boolean) {
+        // Invalidate any deferred selection apply still waiting on the stocks.
+        this.game.nextRowInteractivityToken();
         this.game.setRowSelectionMode('none');
         this.game.setGuessAllowed(false);
         this.game.closeGuessPicker();
