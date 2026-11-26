@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bga\Games\deductiobg;
+namespace Bga\Games\DeductioBG;
 
 /**
  * Static card definitions and truth-evaluation logic for Deductio.

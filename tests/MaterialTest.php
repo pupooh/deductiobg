@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bga\Games\deductiobg\Tests;
+namespace Bga\Games\DeductioBG\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Bga\Games\deductiobg\Material;
+use Bga\Games\DeductioBG\Material;
 
 final class MaterialTest extends TestCase
 {

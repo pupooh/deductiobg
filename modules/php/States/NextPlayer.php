@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bga\Games\deductiobg\States;
+namespace Bga\Games\DeductioBG\States;
 
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
-use Bga\Games\deductiobg\Game;
+use Bga\Games\DeductioBG\Game;
 
 class NextPlayer extends GameState
 {

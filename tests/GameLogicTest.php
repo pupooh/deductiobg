@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Bga\Games\deductiobg\Tests;
+namespace Bga\Games\DeductioBG\Tests;
 
 use Bga\GameFramework\UserException;
 use PHPUnit\Framework\TestCase;
-use Bga\Games\deductiobg\Cards\CardLocation;
-use Bga\Games\deductiobg\Cards\ClueCard;
-use Bga\Games\deductiobg\Game;
-use Bga\Games\deductiobg\Material;
-use Bga\Games\deductiobg\States\EndScore;
-use Bga\Games\deductiobg\States\FreeGuess;
-use Bga\Games\deductiobg\States\LookAtCards;
-use Bga\Games\deductiobg\States\NextPlayer;
-use Bga\Games\deductiobg\States\PlayerTurn;
+use Bga\Games\DeductioBG\Cards\CardLocation;
+use Bga\Games\DeductioBG\Cards\ClueCard;
+use Bga\Games\DeductioBG\Game;
+use Bga\Games\DeductioBG\Material;
+use Bga\Games\DeductioBG\States\EndScore;
+use Bga\Games\DeductioBG\States\FreeGuess;
+use Bga\Games\DeductioBG\States\LookAtCards;
+use Bga\Games\DeductioBG\States\NextPlayer;
+use Bga\Games\DeductioBG\States\PlayerTurn;
 
 final class GameLogicTest extends TestCase
 {

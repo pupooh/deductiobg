@@ -5,7 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/BgaStubs.php';
 
 spl_autoload_register(static function (string $class): void {
-    $prefix = 'Bga\\Games\\deductiobg\\';
+    $prefix = 'Bga\\Games\\DeductioBG\\';
     if (!str_starts_with($class, $prefix)) {
         return;
     }

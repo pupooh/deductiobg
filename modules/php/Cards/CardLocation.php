@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bga\Games\deductiobg\Cards;
+namespace Bga\Games\DeductioBG\Cards;
 
 /**
  * Location constants used by SecretCardManager and ClueCardManager.

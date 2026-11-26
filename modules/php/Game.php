@@ -16,17 +16,17 @@
 
 declare(strict_types=1);
 
-namespace Bga\Games\deductiobg;
+namespace Bga\Games\DeductioBG;
 
 use Bga\GameFramework\UserException;
-use Bga\Games\deductiobg\Cards\CardLocation;
-use Bga\Games\deductiobg\Cards\ClueCard;
-use Bga\Games\deductiobg\Cards\ClueCardManager;
-use Bga\Games\deductiobg\Cards\SecretCard;
-use Bga\Games\deductiobg\Cards\SecretCardManager;
-use Bga\Games\deductiobg\States\EndScore;
-use Bga\Games\deductiobg\States\NextPlayer;
-use Bga\Games\deductiobg\States\PlayerTurn;
+use Bga\Games\DeductioBG\Cards\CardLocation;
+use Bga\Games\DeductioBG\Cards\ClueCard;
+use Bga\Games\DeductioBG\Cards\ClueCardManager;
+use Bga\Games\DeductioBG\Cards\SecretCard;
+use Bga\Games\DeductioBG\Cards\SecretCardManager;
+use Bga\Games\DeductioBG\States\EndScore;
+use Bga\Games\DeductioBG\States\NextPlayer;
+use Bga\Games\DeductioBG\States\PlayerTurn;
 
 class Game extends \Bga\GameFramework\Table
 {

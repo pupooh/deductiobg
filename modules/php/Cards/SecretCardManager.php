@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Bga\Games\deductiobg\Cards;
+namespace Bga\Games\DeductioBG\Cards;
 
 use Bga\GameFramework\Components\ItemManager\ItemLocation;
 use Bga\GameFramework\Components\ItemManager\ItemManager;
 use Bga\GameFramework\Components\ItemManagerFactory;
-use Bga\Games\deductiobg\Material;
+use Bga\Games\DeductioBG\Material;
 
 /**
  * Manages SecretCard items (1..20) via BGA ItemManager.
