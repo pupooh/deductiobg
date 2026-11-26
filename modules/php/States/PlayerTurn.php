@@ -9,109 +9,193 @@ use Bga\GameFramework\States\GameState;
 use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\UserException;
 use SuaVEStudio\BrainGames\Deductio\Game;
+use SuaVEStudio\BrainGames\Deductio\Material;
 
 class PlayerTurn extends GameState
 {
-    function __construct(
+    public function __construct(
         protected Game $game,
     ) {
-        parent::__construct($game,
+        parent::__construct(
+            $game,
             id: 10,
             type: StateType::ACTIVE_PLAYER,
         );
     }
 
     /**
-     * Game state arguments, example content.
+     * Publicly visible state args (never expose truthfulClueIds here).
      *
-     * This method returns some additional information that is very specific to the `PlayerTurn` game state.
+     * @return array{penaltyRemaining: int, canGuess: bool}
      */
     public function getArgs(): array
     {
-        // Get some values from the current game situation from the database.
+        $penaltyRemaining = (int) $this->game->globals->get(Game::GLOBAL_PENALTY_REMAINING, 0);
 
         return [
-            "playableCardsIds" => [1, 2],
+            'penaltyRemaining' => $penaltyRemaining,
+            'canGuess' => $penaltyRemaining === 0,
         ];
-    }    
+    }
 
-    /**
-     * Player action, example content.
-     *
-     * In this scenario, each time a player plays a card, this method will be called. This method is called directly
-     * by the action trigger on the front side with `bgaPerformAction`.
-     *
-     * @throws UserException
-     */
     #[PossibleAction]
-    public function actPlayCard(int $card_id, int $activePlayerId, array $args)
+    public function actPlayClue(int $cardId, int $activePlayerId): string
     {
-        // check input values
-        $playableCardsIds = $args['playableCardsIds'];
-        if (!in_array($card_id, $playableCardsIds)) {
-            throw new UserException('Invalid card choice');
+        $rowCards = $this->game->clueCards->getRowCards();
+        $playedCard = null;
+        $playedSlot = null;
+
+        foreach ($rowCards as $slot => $card) {
+            if ($card->id === $cardId) {
+                $playedCard = $card;
+                $playedSlot = $slot;
+                break;
+            }
         }
 
-        // Add your game logic to play a card here.
-        $card_name = Game::$CARD_TYPES[$card_id]['card_name'];
+        if ($playedCard === null) {
+            throw new UserException('Selected Clue card is not in the face-up row');
+        }
 
-        // Notify all players about the card played.
-        $this->bga->notify->all("cardPlayed", clienttranslate('${player_name} plays ${card_name}'), [
-            "player_id" => $activePlayerId,
-            "player_name" => $this->game->getPlayerNameById($activePlayerId), // remove this line if you uncomment notification decorator
-            "card_name" => $card_name, // remove this line if you uncomment notification decorator
-            "card_id" => $card_id,
-            "i18n" => ['card_name'], // remove this line if you uncomment notification decorator
-        ]);
+        $secretCard = $this->game->secretCards->getPlayerSecretCard($activePlayerId);
+        if ($secretCard === null) {
+            throw new UserException('Active player has no Secret Number card');
+        }
 
-        // in this example, the player gains 1 points each time he plays a card
-        $this->bga->playerScore->inc($activePlayerId, 1);
+        $revealedNumbers = $this->game->secretCards->getRevealedNumbers();
+        if (!Material::isClueTrueForNumber($playedCard->clueTypeId, $secretCard->number, $revealedNumbers)) {
+            throw new UserException('You can only play a Clue card that truthfully describes your Secret Number');
+        }
 
-        // at the end of the action, move to the next state
+        $this->game->clueCards->playVertical($playedCard, $activePlayerId);
+        $this->bga->playerStats->inc('clues_played_vertical', 1, $activePlayerId);
+
+        $def = Material::getClueDefinition($playedCard->clueTypeId);
+        $this->bga->notify->all(
+            'cluePlayedVertical',
+            clienttranslate('${player_name} plays Clue "${clue_label}" vertically.'),
+            [
+                'player_id' => $activePlayerId,
+                'slot' => $playedSlot,
+                'card' => $this->game->serializeClueCard($playedCard),
+                'clue_label' => $def['label'],
+            ]
+        );
+
+        $this->game->replenishClueRow();
+
+        $penaltyRemaining = (int) $this->game->globals->get(Game::GLOBAL_PENALTY_REMAINING, 0);
+        if ($penaltyRemaining > 0) {
+            $this->game->globals->set(Game::GLOBAL_PENALTY_REMAINING, $penaltyRemaining - 1);
+            return $penaltyRemaining - 1 > 0 ? PlayerTurn::class : NextPlayer::class;
+        }
+
+        // Trigger Clue ability on normal (non-penalty) vertical play
+        $ability = Material::getAbility($playedCard->clueTypeId);
+        if ($ability === Material::ABILITY_FREE_GUESS) {
+            $this->bga->playerStats->inc('abilities_triggered', 1, $activePlayerId);
+            return FreeGuess::class;
+        }
+
+        if ($ability === Material::ABILITY_LOOK_1 || $ability === Material::ABILITY_LOOK_2) {
+            $count = $ability === Material::ABILITY_LOOK_2 ? 2 : 1;
+            $peeked = $this->game->secretCards->peekTopCards($count);
+            if ($peeked !== []) {
+                $this->bga->playerStats->inc('abilities_triggered', 1, $activePlayerId);
+                $peekedIds = array_map(static fn($c): int => $c->id, $peeked);
+                $this->game->globals->set(Game::GLOBAL_PEEKED_CARD_IDS, $peekedIds);
+
+                $this->bga->notify->player($activePlayerId, 'peekSecretCards', '', [
+                    'cards' => array_map($this->game->serializeSecretCard(...), $peeked),
+                ]);
+
+                return LookAtCards::class;
+            }
+        }
+
         return NextPlayer::class;
     }
 
-    /**
-     * Player action, example content.
-     *
-     * In this scenario, each time a player pass, this method will be called. This method is called directly
-     * by the action trigger on the front side with `bgaPerformAction`.
-     */
     #[PossibleAction]
-    public function actPass(int $activePlayerId)
+    public function actPlayAllHorizontal(int $activePlayerId): string
     {
-        // Notify all players about the choice to pass.
-        $this->notify->all("pass", clienttranslate('${player_name} passes'), [
-            "player_id" => $activePlayerId,
-            "player_name" => $this->game->getPlayerNameById($activePlayerId), // remove this line if you uncomment notification decorator
-        ]);
+        $rowCards = $this->game->clueCards->getRowCards();
+        if ($rowCards === []) {
+            throw new UserException('No Clue cards available in the row');
+        }
 
-        // in this example, the player gains 1 energy each time he passes
-        $this->game->playerEnergy->inc($activePlayerId, 1);
+        $secretCard = $this->game->secretCards->getPlayerSecretCard($activePlayerId);
+        if ($secretCard === null) {
+            throw new UserException('Active player has no Secret Number card');
+        }
 
-        // at the end of the action, move to the next state
+        $revealedNumbers = $this->game->secretCards->getRevealedNumbers();
+        foreach ($rowCards as $card) {
+            if (Material::isClueTrueForNumber($card->clueTypeId, $secretCard->number, $revealedNumbers)) {
+                throw new UserException('You cannot play all Clue cards horizontally when a truthful Clue is available');
+            }
+        }
+
+        $playedCards = $this->game->clueCards->playAllHorizontal($activePlayerId);
+        $this->bga->playerStats->inc('clues_played_horizontal', 1, $activePlayerId);
+
+        $this->bga->notify->all(
+            'cluesPlayedHorizontal',
+            clienttranslate('${player_name} has no truthful Clue and takes all ${count} Clue cards horizontally.'),
+            [
+                'player_id' => $activePlayerId,
+                'count' => count($playedCards),
+                'cards' => array_map($this->game->serializeClueCard(...), $playedCards),
+            ]
+        );
+
+        $this->game->replenishClueRow();
+
+        $penaltyRemaining = (int) $this->game->globals->get(Game::GLOBAL_PENALTY_REMAINING, 0);
+        if ($penaltyRemaining > 0) {
+            $this->game->globals->set(Game::GLOBAL_PENALTY_REMAINING, $penaltyRemaining - 1);
+            return $penaltyRemaining - 1 > 0 ? PlayerTurn::class : NextPlayer::class;
+        }
+
         return NextPlayer::class;
     }
 
-    /**
-     * This method is called each time it is the turn of a player who has quit the game (= "zombie" player).
-     * You can do whatever you want in order to make sure the turn of this player ends appropriately
-     * (ex: play a random card).
-     * 
-     * See more about Zombie Mode: https://en.doc.boardgamearena.com/Zombie_Mode
-     *
-     * Important: your zombie code will be called when the player leaves the game. This action is triggered
-     * from the main site and propagated to the gameserver from a server, not from a browser.
-     * As a consequence, there is no current player associated to this action. In your zombieTurn function,
-     * you must _never_ use `getCurrentPlayerId()` or `getCurrentPlayerName()`, 
-     * but use the $playerId passed in parameter and $this->game->getPlayerNameById($playerId) instead.
-     */
-    function zombie(int $playerId) {
-        // Example of zombie level 0: return NextPlayer::class; or $this->actPass($playerId);
+    #[PossibleAction]
+    public function actGuess(int $targetPlayerId, int $number, int $activePlayerId): string
+    {
+        $penaltyRemaining = (int) $this->game->globals->get(Game::GLOBAL_PENALTY_REMAINING, 0);
+        if ($penaltyRemaining > 0) {
+            throw new UserException('You cannot guess during a penalty Clue action');
+        }
 
-        // Example of zombie level 1:
-        $args = $this->getArgs();
-        $zombieChoice = $this->getRandomZombieChoice($args['playableCardsIds']); // random choice over possible moves
-        return $this->actPlayCard($zombieChoice, $playerId, $args); // this function will return the transition to the next state
+        return $this->game->resolveGuess($activePlayerId, $targetPlayerId, $number, false);
+    }
+
+    public function zombie(int $playerId): string
+    {
+        $rowCards = $this->game->clueCards->getRowCards();
+        if ($rowCards === []) {
+            return NextPlayer::class;
+        }
+
+        $secretCard = $this->game->secretCards->getPlayerSecretCard($playerId);
+        if ($secretCard === null) {
+            return NextPlayer::class;
+        }
+
+        $revealedNumbers = $this->game->secretCards->getRevealedNumbers();
+        $truthfulIds = [];
+        foreach ($rowCards as $card) {
+            if (Material::isClueTrueForNumber($card->clueTypeId, $secretCard->number, $revealedNumbers)) {
+                $truthfulIds[] = $card->id;
+            }
+        }
+
+        if ($truthfulIds !== []) {
+            $choice = $this->getRandomZombieChoice($truthfulIds);
+            return $this->actPlayClue($choice, $playerId);
+        }
+
+        return $this->actPlayAllHorizontal($playerId);
     }
 }
