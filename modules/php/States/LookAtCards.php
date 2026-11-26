@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bga\Games\DeductioBG\States;
 
+use Bga\GameFramework\Actions\Types\IntArrayParam;
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\GameFramework\States\PossibleAction;
@@ -40,7 +41,7 @@ class LookAtCards extends GameState
      * @param int[] $orderedCardIds
      */
     #[PossibleAction]
-    public function actReturnPeekedCards(array $orderedCardIds, int $activePlayerId): string
+    public function actReturnPeekedCards(#[IntArrayParam] array $orderedCardIds, int $activePlayerId): string
     {
         $expectedIds = $this->game->globals->get(Game::GLOBAL_PEEKED_CARD_IDS, []);
         $orderedCardIds = array_map('intval', $orderedCardIds);
