@@ -5,39 +5,33 @@ declare(strict_types=1);
 namespace SuaVEStudio\BrainGames\Deductio\States;
 
 use Bga\GameFramework\StateType;
+use Bga\GameFramework\States\GameState;
 use SuaVEStudio\BrainGames\Deductio\Game;
 
-class NextPlayer extends \Bga\GameFramework\States\GameState
+class NextPlayer extends GameState
 {
-
-    function __construct(
+    public function __construct(
         protected Game $game,
     ) {
-        parent::__construct($game,
+        parent::__construct(
+            $game,
             id: 90,
             type: StateType::GAME,
             updateGameProgression: true,
         );
     }
 
-    /**
-     * Game state action, example content.
-     *
-     * The onEnteringState method of state `nextPlayer` is called everytime the current game state is set to `nextPlayer`.
-     */
-    function onEnteringState(int $activePlayerId) {
+    public function onEnteringState(int $activePlayerId): string
+    {
+        $this->game->globals->set(Game::GLOBAL_PENALTY_REMAINING, 0);
+        $this->game->globals->set(Game::GLOBAL_PEEKED_CARD_IDS, []);
 
-        // Give some extra time to the active player when he completed an action
+        $this->bga->tableStats->inc('turns_number', 1);
+        $this->bga->playerStats->inc('turns_number', 1, $activePlayerId);
+
         $this->game->giveExtraTime($activePlayerId);
-        
         $this->game->activeNextPlayer();
 
-        // Go to another gamestate
-        $gameEnd = false; // Here, we would detect if the game is over to make the appropriate transition
-        if ($gameEnd) {
-            return EndScore::class;
-        } else {
-            return PlayerTurn::class;
-        }
+        return PlayerTurn::class;
     }
 }
