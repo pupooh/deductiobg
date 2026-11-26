@@ -26,7 +26,7 @@ final class Material
 
     /**
      * All 35 regular Clue card definitions keyed by clueTypeId (1..35).
-     * Index in img/clue_cards.png is (clueTypeId - 1), and Reveal card is index 35.
+     * Index in img/clue_cards.webp is (clueTypeId - 1), and Reveal card is index 35.
      *
      * @var array<int, array{
      *     category: string,
