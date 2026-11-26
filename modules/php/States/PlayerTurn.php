@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\States;
+namespace Bga\Games\deductiobg\States;
 
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\UserException;
-use SuaVEStudio\BrainGames\Deductio\Game;
-use SuaVEStudio\BrainGames\Deductio\Material;
+use Bga\Games\deductiobg\Game;
+use Bga\Games\deductiobg\Material;
 
 class PlayerTurn extends GameState
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\Tests;
+namespace Bga\Games\deductiobg\Tests;
 
 use PHPUnit\Framework\TestCase;
-use SuaVEStudio\BrainGames\Deductio\Material;
+use Bga\Games\deductiobg\Material;
 
 final class MaterialTest extends TestCase
 {

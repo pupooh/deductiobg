@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\Cards;
+namespace Bga\Games\deductiobg\Cards;
 
 /**
  * Location constants used by SecretCardManager and ClueCardManager.

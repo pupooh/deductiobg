@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\States;
+namespace Bga\Games\deductiobg\States;
 
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
 use Bga\GameFramework\States\PossibleAction;
 use Bga\GameFramework\UserException;
-use SuaVEStudio\BrainGames\Deductio\Game;
+use Bga\Games\deductiobg\Game;
 
 class LookAtCards extends GameState
 {

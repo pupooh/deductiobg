@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\Cards;
+namespace Bga\Games\deductiobg\Cards;
 
 use Bga\GameFramework\Components\ItemManager\ItemLocation;
 use Bga\GameFramework\Components\ItemManager\ItemManager;
 use Bga\GameFramework\Components\ItemManagerFactory;
-use SuaVEStudio\BrainGames\Deductio\Material;
+use Bga\Games\deductiobg\Material;
 
 /**
  * Manages ClueCard items (35 regular Clue cards + 5/7 Reveal cards) via BGA ItemManager.

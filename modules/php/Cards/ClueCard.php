@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\Cards;
+namespace Bga\Games\deductiobg\Cards;
 
 use Bga\GameFramework\Components\ItemManager\Item;
 use Bga\GameFramework\Components\ItemManager\ItemField;

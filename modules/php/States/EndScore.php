@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\States;
+namespace Bga\Games\deductiobg\States;
 
 use Bga\GameFramework\StateType;
 use Bga\GameFramework\States\GameState;
-use SuaVEStudio\BrainGames\Deductio\Game;
+use Bga\Games\deductiobg\Game;
 
 const ST_END_GAME = 99;
 

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio\Tests;
+namespace Bga\Games\deductiobg\Tests;
 
 use Bga\GameFramework\UserException;
 use PHPUnit\Framework\TestCase;
-use SuaVEStudio\BrainGames\Deductio\Cards\CardLocation;
-use SuaVEStudio\BrainGames\Deductio\Cards\ClueCard;
-use SuaVEStudio\BrainGames\Deductio\Game;
-use SuaVEStudio\BrainGames\Deductio\Material;
-use SuaVEStudio\BrainGames\Deductio\States\EndScore;
-use SuaVEStudio\BrainGames\Deductio\States\FreeGuess;
-use SuaVEStudio\BrainGames\Deductio\States\LookAtCards;
-use SuaVEStudio\BrainGames\Deductio\States\NextPlayer;
-use SuaVEStudio\BrainGames\Deductio\States\PlayerTurn;
+use Bga\Games\deductiobg\Cards\CardLocation;
+use Bga\Games\deductiobg\Cards\ClueCard;
+use Bga\Games\deductiobg\Game;
+use Bga\Games\deductiobg\Material;
+use Bga\Games\deductiobg\States\EndScore;
+use Bga\Games\deductiobg\States\FreeGuess;
+use Bga\Games\deductiobg\States\LookAtCards;
+use Bga\Games\deductiobg\States\NextPlayer;
+use Bga\Games\deductiobg\States\PlayerTurn;
 
 final class GameLogicTest extends TestCase
 {

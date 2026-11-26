@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio;
+namespace Bga\Games\deductiobg;
 
 /**
  * Static card definitions and truth-evaluation logic for Deductio.

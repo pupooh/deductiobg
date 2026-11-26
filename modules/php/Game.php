@@ -16,17 +16,17 @@
 
 declare(strict_types=1);
 
-namespace SuaVEStudio\BrainGames\Deductio;
+namespace Bga\Games\deductiobg;
 
 use Bga\GameFramework\UserException;
-use SuaVEStudio\BrainGames\Deductio\Cards\CardLocation;
-use SuaVEStudio\BrainGames\Deductio\Cards\ClueCard;
-use SuaVEStudio\BrainGames\Deductio\Cards\ClueCardManager;
-use SuaVEStudio\BrainGames\Deductio\Cards\SecretCard;
-use SuaVEStudio\BrainGames\Deductio\Cards\SecretCardManager;
-use SuaVEStudio\BrainGames\Deductio\States\EndScore;
-use SuaVEStudio\BrainGames\Deductio\States\NextPlayer;
-use SuaVEStudio\BrainGames\Deductio\States\PlayerTurn;
+use Bga\Games\deductiobg\Cards\CardLocation;
+use Bga\Games\deductiobg\Cards\ClueCard;
+use Bga\Games\deductiobg\Cards\ClueCardManager;
+use Bga\Games\deductiobg\Cards\SecretCard;
+use Bga\Games\deductiobg\Cards\SecretCardManager;
+use Bga\Games\deductiobg\States\EndScore;
+use Bga\Games\deductiobg\States\NextPlayer;
+use Bga\Games\deductiobg\States\PlayerTurn;
 
 class Game extends \Bga\GameFramework\Table
 {
