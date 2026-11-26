@@ -30,8 +30,8 @@ class ClueCardManager
                 ),
                 new ItemLocation(CardLocation::DISCARD),
                 new ItemLocation(CardLocation::BOX),
-                new ItemLocation(CardLocation::ROW . '_*'),
-                new ItemLocation(CardLocation::TABLEAU . '_*'),
+                new ItemLocation(CardLocation::ROW),
+                new ItemLocation(CardLocation::TABLEAU),
             ],
         );
     }

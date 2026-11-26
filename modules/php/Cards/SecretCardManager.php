@@ -24,8 +24,8 @@ class SecretCardManager
             locations: [
                 new ItemLocation(CardLocation::DECK),
                 new ItemLocation(CardLocation::REVEALED),
-                new ItemLocation(CardLocation::HAND . '_*'),
-                new ItemLocation(CardLocation::GUESSED . '_*'),
+                new ItemLocation(CardLocation::HAND),
+                new ItemLocation(CardLocation::GUESSED),
             ],
         );
     }
