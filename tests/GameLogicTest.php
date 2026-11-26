@@ -141,25 +141,52 @@ final class GameLogicTest extends TestCase
         $p2 = 102;
 
         // Place a horizontal +1 clue (type 30) and a horizontal >=6 clue (type 20) in P2's tableau,
-        // and a vertical +1 clue (type 30) in P1's tableau.
+        // and a vertical -1 clue (type 31) in P1's tableau.
         $clueMgr = $this->getInternalManager($game->clueCards);
-        $deckCards = $clueMgr->getItemsInLocation(CardLocation::DECK)->values();
 
-        $hAdj = null;
-        $hOther = null;
-        $vAdj = null;
+        // The 35 regular Clue cards exist exactly once each, and setup deals 3 of them
+        // face-up into the row before the Reveal cards are shuffled in — so a needed
+        // type may be sitting in the row instead of the deck. Search the row too, and
+        // swap a spare deck card into its slot so the row stays at 3 cards.
+        // (Previously this only searched the deck, so the test failed with
+        // "Attempt to assign property orientation on null" whenever a needed type
+        // had been dealt into the row — roughly 1 run in 4.)
+        $neededTypes = [30, 20, 31];
+        $findClue = static function (int $typeId) use ($clueMgr, $game, $neededTypes): ?ClueCard {
+            $deckCards = $clueMgr->getItemsInLocation(CardLocation::DECK)->values();
+            foreach ($deckCards as $c) {
+                if (!$c->isReveal && $c->clueTypeId === $typeId) {
+                    return $c;
+                }
+            }
+            foreach ($game->clueCards->getRowCards() as $slot => $c) {
+                if (!$c->isReveal && $c->clueTypeId === $typeId) {
+                    foreach ($deckCards as $replacement) {
+                        if (!$replacement->isReveal && !in_array($replacement->clueTypeId, $neededTypes, true)) {
+                            $clueMgr->moveItem($replacement, [CardLocation::ROW, $slot]);
+                            break;
+                        }
+                    }
+                    return $c;
+                }
+            }
+            return null;
+        };
+
+        $hAdj = $findClue(30);
+        $hOther = $findClue(20);
+        $vAdj = $findClue(31);
         $revealCard = null;
-        foreach ($deckCards as $c) {
-            if (!$c->isReveal && $c->clueTypeId === 30 && $hAdj === null) {
-                $hAdj = $c;
-            } elseif (!$c->isReveal && $c->clueTypeId === 20 && $hOther === null) {
-                $hOther = $c;
-            } elseif (!$c->isReveal && $c->clueTypeId === 31 && $vAdj === null) {
-                $vAdj = $c;
-            } elseif ($c->isReveal && $revealCard === null) {
+        foreach ($clueMgr->getItemsInLocation(CardLocation::DECK)->values() as $c) {
+            if ($c->isReveal) {
                 $revealCard = $c;
+                break;
             }
         }
+        $this->assertNotNull($hAdj, 'Type 30 (+1) clue not found in deck or row');
+        $this->assertNotNull($hOther, 'Type 20 (>=6) clue not found in deck or row');
+        $this->assertNotNull($vAdj, 'Type 31 (-1) clue not found in deck or row');
+        $this->assertNotNull($revealCard, 'Reveal card not found in deck');
 
         $hAdj->orientation = ClueCard::ORIENTATION_HORIZONTAL;
         $clueMgr->moveItem($hAdj, [CardLocation::TABLEAU, $p2]);
@@ -169,14 +196,17 @@ final class GameLogicTest extends TestCase
         $clueMgr->moveItem($vAdj, [CardLocation::TABLEAU, $p1]);
 
         // Put a non-reveal card right below a Reveal card on top of the Clue deck, and empty slot 0 in row
+        // (re-fetch deck and row: the swaps above may have moved cards between them)
         $nonRevealForSlot = null;
-        foreach ($deckCards as $c) {
+        foreach ($clueMgr->getItemsInLocation(CardLocation::DECK)->values() as $c) {
             if (!$c->isReveal && $c !== $hAdj && $c !== $hOther && $c !== $vAdj) {
                 $nonRevealForSlot = $c;
                 break;
             }
         }
+        $this->assertNotNull($nonRevealForSlot, 'No spare non-reveal card in deck');
         $rowCards = $game->clueCards->getRowCards();
+        $this->assertArrayHasKey(0, $rowCards, 'Row slot 0 is empty');
         $clueMgr->moveItem($rowCards[0], CardLocation::DISCARD);
         $maxOrder = $clueMgr->getMaxOrderInLocation(CardLocation::DECK);
         $clueMgr->moveItem($nonRevealForSlot, CardLocation::DECK, $maxOrder + 5);
@@ -263,9 +293,6 @@ final class GameLogicTest extends TestCase
         $p1 = 101;
         $game->secretCards->getPlayerSecretCard($p1)->number = 3;
 
-        $top2Before = $game->secretCards->peekTopCards(2);
-        $this->assertCount(2, $top2Before);
-
         $row = $game->clueCards->getRowCards();
         $row[0]->clueTypeId = 32; // = 1-5 + Look at 2 Cards
 
@@ -277,8 +304,17 @@ final class GameLogicTest extends TestCase
         // Public args must only expose count, not numbers
         $this->assertSame(['count' => 2], $lookState->getArgs());
 
+        // Take the peeked cards from what the server actually stored: peeking
+        // the deck before the play is not stable, because replenishing the Clue
+        // row can draw a Reveal card and pop the top Secret card off the deck
+        // before the Look ability peeks — so a pre-play snapshot often no
+        // longer matches the peeked cards ("Returned cards do not match the
+        // peeked cards", roughly 1 run in 5).
+        $peekedIds = $game->globals->get(Game::GLOBAL_PEEKED_CARD_IDS, []);
+        $this->assertCount(2, $peekedIds);
+
         // Return in reversed order
-        $reversedIds = [$top2Before[1]->id, $top2Before[0]->id];
+        $reversedIds = array_reverse($peekedIds);
         $after = $lookState->actReturnPeekedCards($reversedIds, $p1);
         $this->assertSame(NextPlayer::class, $after);
 

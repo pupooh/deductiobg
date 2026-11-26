@@ -1,0 +1,420 @@
+/**
+ *------
+ * BGA framework: Gregory Isabelli & Emmanuel Colin & BoardGameArena
+ * deductiobg implementation : © <Your name here> <Your email address here>
+ *
+ * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+ * See http://en.doc.boardgamearena.com/Studio for more information.
+ * -----
+ */
+
+/********* Deductio styles **********/
+
+// Cards are displayed at 90x144 (half scale of the 180x288 sprites).
+$card-width: 90px;
+$card-height: 144px;
+
+/* ---------- Table layout ---------- */
+
+#dd-table {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 740px;
+}
+
+#dd-center {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dd-zone {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid #c9b896;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.dd-zone-title {
+    font-weight: bold;
+    font-size: 15px;
+    margin-bottom: 8px;
+}
+
+.dd-deck-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.dd-deck-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.dd-deck {
+    width: $card-width;
+    height: $card-height;
+}
+
+.dd-deck-count {
+    font-weight: bold;
+    font-size: 14px;
+    min-height: 18px;
+}
+
+.dd-deck-label {
+    font-size: 12px;
+    color: #555;
+    text-align: center;
+}
+
+.dd-revealed-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.dd-stock {
+    min-height: $card-height;
+}
+
+.dd-revealed-stock,
+.dd-clue-row-stock {
+    flex: 1;
+}
+
+#dd-player-tables {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.dd-player-table {
+    flex: 1 1 340px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid #c9b896;
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-width: 340px;
+}
+
+.dd-player-table-me {
+    border-color: #2b7a2b;
+    box-shadow: 0 0 0 1px #2b7a2b;
+}
+
+.dd-player-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.dd-you-badge {
+    background: #2b7a2b;
+    color: #fff;
+    border-radius: 8px;
+    padding: 1px 7px;
+    font-size: 11px;
+}
+
+.dd-secret-label {
+    font-size: 12px;
+    color: #555;
+}
+
+.dd-player-secret-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 6px;
+}
+
+.dd-secret-stock {
+    flex-shrink: 0;
+}
+
+.dd-guessed-zone {
+    flex: 1;
+}
+
+.dd-mini-label {
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 2px;
+}
+
+.dd-tableau-stock {
+    // Horizontal tableau cards are rotated 90deg by the card manager and
+    // extend ~27px past their layout box on each side; the wide gap in
+    // the stock settings keeps them from overlapping their neighbours.
+    min-height: $card-height;
+}
+
+/* ---------- Card faces (sprites) ---------- */
+
+// Clue faces: img/clue_cards.webp, 1080x1728, 6x6 grid of 180x288 cells.
+// background-size is the sheet at half scale; background-position is set
+// inline per card by the ClueCardManager.
+.dd-clue-face {
+    width: 100%;
+    height: 100%;
+    background-image: url('img/clue_cards.webp');
+    background-size: 540px 864px;
+    background-repeat: no-repeat;
+    border-radius: 6px;
+}
+
+// Secret faces: img/secret_cards.webp, 900x1152, 5x4 grid of 180x288 cells.
+.dd-secret-face {
+    width: 100%;
+    height: 100%;
+    background-image: url('img/secret_cards.webp');
+    background-size: 450px 576px;
+    background-repeat: no-repeat;
+    border-radius: 6px;
+}
+
+// Card backs: img/card_backs.webp, 360x288, two 180x288 cells.
+// Left cell (blue "deductio" logo) = clue back, right cell (black, ? cards)
+// = secret back. That assignment is an assumption from the artwork and
+// needs a Studio visual check.
+.dd-clue-back-face {
+    width: 100%;
+    height: 100%;
+    background-image: url('img/card_backs.webp');
+    background-size: 180px 144px;
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    border-radius: 6px;
+}
+
+.dd-secret-back-face {
+    width: 100%;
+    height: 100%;
+    background-image: url('img/card_backs.webp');
+    background-size: 180px 144px;
+    background-position: -90px 0;
+    background-repeat: no-repeat;
+    border-radius: 6px;
+}
+
+/* ---------- Interactivity ---------- */
+
+// Truthful Clue cards in the row are selectable (bga-cards draws its
+// 5px dashed orange outline on them); add a gold glow as well.
+.dd-clue-row-stock .bga-cards_selectable-card {
+    box-shadow: 0 0 12px 2px rgba(255, 200, 0, 0.85);
+    cursor: pointer;
+}
+
+// Opponent Secret cards are clickable to open the guess picker.
+.dd-secret-stock .bga-cards_card {
+    cursor: pointer;
+}
+
+.dd-guess-btn {
+    background: #2b7a2b;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.dd-guess-btn:hover {
+    background: #359135;
+}
+
+.dd-guess-btn.dd-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.dd-guess-btn-panel {
+    margin-top: 4px;
+}
+
+/* ---------- Guess picker / peek modals ---------- */
+
+.dd-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.dd-modal[hidden] {
+    display: none;
+}
+
+.dd-modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    max-width: 520px;
+    width: calc(100% - 40px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.dd-modal-title {
+    font-weight: bold;
+    font-size: 17px;
+    margin-bottom: 10px;
+}
+
+.dd-modal-hint {
+    font-size: 12px;
+    color: #555;
+    margin: 10px 0;
+}
+
+.dd-modal-targets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.dd-picker-target {
+    border: 2px solid #999;
+    background: #f2f2f2;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.dd-picker-target.dd-selected {
+    border-color: #2b7a2b;
+    background: #dff0df;
+    font-weight: bold;
+}
+
+.dd-modal-numbers {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 6px;
+}
+
+.dd-picker-number {
+    border: 1px solid #999;
+    background: #fff;
+    border-radius: 6px;
+    padding: 8px 0;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.dd-picker-number:hover:not(:disabled) {
+    background: #dff0df;
+    border-color: #2b7a2b;
+}
+
+.dd-picker-number.dd-dimmed {
+    opacity: 0.35;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.dd-modal-cancel,
+.dd-modal-confirm {
+    margin-top: 14px;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.dd-modal-cancel {
+    background: #e0e0e0;
+}
+
+.dd-modal-confirm {
+    background: #2b7a2b;
+    color: #fff;
+}
+
+.dd-peek-cards {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin: 12px 0;
+}
+
+.dd-peek-card {
+    width: $card-width;
+    height: $card-height;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.dd-peek-card.dd-peek-selected {
+    outline: 4px solid #2b7a2b;
+    outline-offset: 2px;
+}
+
+/* ---------- Deduction notepad ---------- */
+
+.dd-notepad {
+    margin-top: 8px;
+}
+
+.dd-notepad-toggle {
+    background: #f2f2f2;
+    border: 1px solid #999;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.dd-notepad-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 4px;
+    margin-top: 6px;
+    max-width: 360px;
+}
+
+.dd-notepad-cell {
+    border: 1px solid #999;
+    background: #fff;
+    border-radius: 4px;
+    padding: 4px 0;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.dd-notepad-cell.dd-eliminated {
+    opacity: 0.45;
+    text-decoration: line-through;
+    background: #e8e8e8;
+}
+
+.dd-notepad-cell.dd-auto {
+    border-style: dashed;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+    .dd-modal-numbers {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .dd-notepad-grid {
+        grid-template-columns: repeat(10, 1fr);
+    }
+}
